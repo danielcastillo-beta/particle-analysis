@@ -50,7 +50,7 @@ else
 end
 
 %%% Sieve series [mm]
-%       #3½ #5  #10 #18 #35  #60  #120   #230                               % QF experimental/simplified sieve series
+%       #3ï¿½ #5  #10 #18 #35  #60  #120   #230                               % QF experimental/simplified sieve series
 %        |   |   |   |   |    |     |      |
 svs = [ 5.6  4   2   1  0.5  0.25  0.125  0.063 0.04  0.02  0.01  0.005  0.0025  0.00125  0.0006  0.0003 ]; % sieve size [mm]
 
@@ -92,7 +92,7 @@ nDiam = 30; % using higher than mg default, since coordinates are external
 tic
 
 disp(' ')
-disp(' § '); disp([' §   Specimen ' smpName ':']); disp(' § ');
+disp(' ï¿½ '); disp([' ï¿½   Specimen ' smpName ':']); disp(' ï¿½ ');
 disp(' ')
 
 % _________________________________________________________________________
@@ -130,14 +130,14 @@ for i = 1:nAgs
     end
 
     % read closed polygon, add to the cell
-    x = xysAg_ext(lnA:lnB-1, 2);
+    x = xysAg_ext(lnA:lnB-1, 2);                       % the first column is index
     y = xysAg_ext(lnA:lnB-1, 3);
     ags{i} = [x y]; % closed
     
     % update line
     lnA = lnB+1;
     
-    % to center coordinates
+    % update the range of area containing aggregates, to center coordinates
     xMin = min(xMin, min(x));
     xMax = max(xMax, max(x));
     yMin = min(yMin, min(y));
@@ -153,7 +153,7 @@ ___________________________________________________________________________
 
     1. agID - 1:nAgs
     2. nVrt - number of vertices
-    3. area - particle area [mm²]
+    3. area - particle area [mmï¿½]
     4. rMax - max. particle radius [mm]
     5. zero
     6. charLen - particle sieve size [mm]
@@ -178,7 +178,7 @@ for i = 1:nAgs
     y = xy(:,2);
 
     % 2. nVrt 
-    nVrt = length(x)-1;
+    nVrt = length(x)-1;                                                     % number of vertices = number of points - 1
     tableAg(i,2) = nVrt;                                                    % Table, Col. 2
 
     % 3. area (not yet sorted)
@@ -196,16 +196,16 @@ for i = 1:nAgs
     % radii
     radii = zeros(nVrt,1);
     for j = 1:nVrt
-        radii(j) = sqrt((x(j)-cx)^2+(y(j)-cy)^2);
+        radii(j) = sqrt((x(j)-cx)^2+(y(j)-cy)^2);                           % the radius equals to the distance between point i to the centroid
     end
     [rMax,index] = max(radii);
     tableAg(i,4) = rMax;                                                    % Table, Col. 4
     
-    % make rMax vertex first/last coordinate 
+    % make rMax vertex first/last coordinate                                % reset the order of the points, by placing the current max-radius point til end to the upper part
     x = [x(index:end-1);x(1:index)]; % was closed. keeps closed
     y = [y(index:end-1);y(1:index)]; % was closed. keeps closed
 
-    % update polygon in cell
+    % update polygon in cell, now in this cell the aggregate points are in the order of decreasing radius
     ags{i} = [x,y];
 
 end
@@ -218,12 +218,12 @@ tableAg = tableAg(index,:);
 ags = ags(index);
 cxyAgs = cxyAgs(index,:);
 
-tableAg(:,1) = (1:nAgs)';                                                   % Table, Col. 1
+tableAg(:,1) = (1:nAgs)';                                                   % Table, Col. 1, after sorting by area reset the aggregate ID
 
 % -------------------------------------------------------------------------
 % 2.3  Find rotation from horizontal, calculate charLen, svRet, agRot
 
-nSvs = length(svs);
+nSvs = length(svs);                                                         % total number of sieves
 
 % clarification
 switch visType, case {1,2}
@@ -252,7 +252,7 @@ for i = 1:nAgs
     cx = cxyAgs(i,1);
     cy = cxyAgs(i,2);
 
-    % centre at zero
+    % move the aggregate centroid to the origin
     x = x-cx;
     y = y-cy;
 
@@ -261,7 +261,7 @@ for i = 1:nAgs
         figure(intFig); clf                                               %
         subplot(1,2,1); hold on                                           %
         plot(x,y, 'k')                                                    %
-        plot([0,x(1)],[0,y(1)], 'color',[.75,.75,.75])                    %
+        plot([0,x(1)],[0,y(1)], 'color',[.75,.75,.75])                    % since aggregates have been sorted, the first one has max radius
         title(['nDiam = ' num2str(nDiam)])                                %
         xlabel('x [mm]'); ylabel('y [mm]')                                %
         axis equal                                                        %
@@ -273,13 +273,13 @@ for i = 1:nAgs
     thetaDiams = zeros(nDiam,4);
 
     % horizontal line
-    canon = sqrt(rMax^2+rMax^2);
+    canon = sqrt(rMax^2+rMax^2);                                          % now put the max radius to the horizontal/x axis
     xd = [-1,1]*canon;
     yd = [0,0];
 
     % rotation matrix
-    thetaRot = pi/nDiam;
-    R = [cos(thetaRot),-sin(thetaRot);sin(thetaRot),cos(thetaRot)]; % counter-clockwise
+    thetaRot = pi/nDiam;                                                  % 6 degrees
+    R = [cos(thetaRot),-sin(thetaRot);sin(thetaRot),cos(thetaRot)];       % counter-clockwise
 
     % rotate the line and intersect the polygon to find diameters
     thetaj = 0;
@@ -292,7 +292,7 @@ for i = 1:nAgs
         end                                                               %
 
         % current theta
-        thetaDiams(j,1) = thetaj;
+        thetaDiams(j,1) = thetaj;                                         % write the current theta into table
 
         % intersection segment and length METHOD 1
         if thetaj/pi == 0.5 % 90 degrees, vertical line
@@ -344,7 +344,7 @@ for i = 1:nAgs
     % criteria
    %[~,index] = min(thetaDiams(:,2)); % A. minimum diameter to vertical
    %[~,index] = max(thetaDiams(:,3)); % B. maximum diameter to horizontal
-    thetaDiams(:,4) = thetaDiams(:,2)-0.1*thetaDiams(:,3);
+    thetaDiams(:,4) = thetaDiams(:,2)-0.1*thetaDiams(:,3);                       % vertical diameter minus 10% of the horizontal diameter, finding the horizontal place by searching for the angle where max difference is found of two orthogonal diameters
     [~,index] = min(thetaDiams(:,4)); % C. minimize weighted combination (cross)
 
     % 'optimum' angle
@@ -383,7 +383,7 @@ for i = 1:nAgs
     tableAg(i,8) = agRot;                                                   % Table, col 8
     
     % display progress
-    if mod(i,round(nAgs*progInt/100)) == 0 || i == nAgs
+    if mod(i,round(nAgs*progInt/100)) == 0 || i == nAgs                     % display the progress if the number of aggregate i reaches every 10% of the total number of aggregates 
        disp(['   | ' num2str(round(i/nAgs*100)) '%']);
     end
 
@@ -403,16 +403,16 @@ for i = 1:nAgs
                                                                           %
         % plot previous/retaining sieve, left/right                       %
         if svRetNo == 0                                                   %
-            plot( [min(x) min(x)], [-svs(nSvs)/2 svs(nSvs)/2], 'ch-' )    %
+            plot( [min(x) min(x)], [-svs(nSvs)/2 svs(nSvs)/2], 'ch-' )    % positive and negative half of the sieve size
         elseif svRetNo == 1                                               %
             plot( [max(x) max(x)], [-svRet/2 svRet/2], 'ch-' )            %
         else                                                              %
             plot( [min(x) min(x)], [-svs(svRetNo-1)/2 svs(svRetNo-1)/2], 'ch-' )
-            plot( [max(x) max(x)], [-svRet/2, svRet/2], 'ch-' )           %
+            plot( [max(x) max(x)], [-svRet/2, svRet/2], 'ch-' )           % within the aggregate diameter on x axis, show the sieve range on y axis (min diameter of the aggregate)
         end                                                               %
                                                                           %
         % labels                                                          %
-        text(0,0,['\theta = ' num2str(tableAg(i,8)*180/pi) '°' ], 'VerticalAlignment','bottom' )
+        text(0,0,['\theta = ' num2str(tableAg(i,8)*180/pi) 'ï¿½' ], 'VerticalAlignment','bottom' )
         text(0,0,['charLen = ' num2str(max(y)-min(y)) ' mm' ], 'VerticalAlignment','top' )
         title(['Polygon ' num2str(i) ' / ' num2str(nAgs)])                %
         xlabel('x [mm]'); ylabel('y [mm]')                                %
@@ -420,7 +420,7 @@ for i = 1:nAgs
         hold off                                                          %
                                                                           %
         % save potential convex polygon                                   %
-        if nIntMax > 2                                                    %
+        if nIntMax > 2                                                    % if the number of intersection points made by the rotated diameter and aggregate exceeds 2, the aggregate is possibly convex
             disp(['   Specimen ' smpName ' | Polygon ' num2str(i) ' may be non-convex. check charLen'])
             saveas(gcf,[dirConvx '/sp' smpName ' - pol' num2str(i) '.png'])
             switch visType, case 2, pause; end                            %
@@ -461,7 +461,7 @@ for i = 1:nAgs
     
 end
 if areaOut ~= 0
-    cxyOutStr = join(cxyOut,','); % 1×1 cell array
+    cxyOutStr = join(cxyOut,','); % 1ï¿½1 cell array
     cxyOutStr = cxyOutStr{1}; % cell
 end
 
@@ -527,7 +527,7 @@ disp(['   Specimen ' smpName ', processing time ' num2str(toc/60) ' minutes. '])
 disp(' ')
 
 % xtra
-disp(['   Specimen area: ' num2str(polyarea(sx,sy)) ' mm²'])
+disp(['   Specimen area: ' num2str(polyarea(sx,sy)) ' mmï¿½'])
 disp(['   agFrac = ' num2str(100*sum(tableAg(:,3))/polyarea(sx,sy)) '%'])
 disp(['   Total vertices: ' num2str( sum(tableAg(:,2)) )])
 disp(['   Smallest sieve size: ' num2str( min(tableAg(:,6)) ) ' mm'])
@@ -543,7 +543,7 @@ if areaOut ~= 0
 end
 
 % info file
-save([dirName '/(' smpName '-' dirName '). nAgs=' num2str(nAgs) ', agFrac=' num2str(100*sum(tableAg(:,3))/polyarea(sx,sy)) '%, spAarea=' num2str(polyarea(sx,sy)) ' mm², nVrts=' num2str( sum(tableAg(:,2)) ) ', smallest sieve size ' num2str( min(tableAg(:,6)) ) 'mm.txt'],'nAgs','-ascii');
+save([dirName '/(' smpName '-' dirName '). nAgs=' num2str(nAgs) ', agFrac=' num2str(100*sum(tableAg(:,3))/polyarea(sx,sy)) '%, spAarea=' num2str(polyarea(sx,sy)) ' mmï¿½, nVrts=' num2str( sum(tableAg(:,2)) ) ', smallest sieve size ' num2str( min(tableAg(:,6)) ) 'mm.txt'],'nAgs','-ascii');
 
 
 end

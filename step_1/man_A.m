@@ -1,6 +1,7 @@
 
-%
 %   Manager
+%   try series of parameters for image processing
+%   calculate the percentages of areas (h50T, h50F) in the processed images (threshold and filling holes)
 %
 
 function man_A

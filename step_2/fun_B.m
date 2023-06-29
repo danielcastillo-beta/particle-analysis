@@ -24,7 +24,7 @@ smpName = 'A';
 % smpName = 'F';
 % smpName = 'H';
 
-% minimum polygon area threshold, equivalent circle
+% minimum polygon area threshold (specified as needed), equivalent circle
 rMin = 0.00125/2; % [mm]
 minArea = pi*rMin^2; % [mm^2]
 
@@ -35,7 +35,7 @@ switch smpName
     case {'C','D','E','F','G','H'}
         pxScl = 371; % [px/mm]
     otherwise
-        pxScl = 1; % [px/mm] arbitrary default
+        pxScl = 1; % [px/mm] arbitrary default, has to be specified for other images
 end
 
 % tolerance interpolation for edge reduction
@@ -44,8 +44,8 @@ end
 %   tol = 1, total reduction
 tol1 = 0.005;
 tol2 = 0.015;
-nVrts1 = 4;
-nVrts2 = 3000;
+nVrts1 = 4;     % arbitary choice of low number of vertices
+nVrts2 = 3000;  % arbitary choice of high number of vertices
 
 ignoreHoles = 0; % (1 yes, 0 no)
 
@@ -62,8 +62,8 @@ tic
 img_orig = imread([dirSmp '/' smpName '.tif']);
 
 % trace boundaries
-B = bwboundaries(img_orig,'noholes'); % 8-connect, default
-%B = bwboundaries(img_orig,4,'noholes'); % 4-connect (more aggregates, more vertices)
+B = bwboundaries(img_orig,'noholes');               % 8-connect, default
+%B = bwboundaries(img_orig,4,'noholes');            % 4-connect (more aggregates, more vertices)
 
 % update boundaries convention and units
 nBnds = length(B);
@@ -72,7 +72,7 @@ for i = 1:nBnds
     % x,y 'inverted', y negative
     yxB = B{i}; % [px]
     xB = yxB(:,2); % [px] 'corrected'
-    yB = -yxB(:,1)+size(img_orig,1); % [px] 'corrected'
+    yB = -yxB(:,1)+size(img_orig,1);                % [px] corrected so that y is positive
     
     % scale coordinates
     xB = xB/pxScl; % [mm]
@@ -93,7 +93,7 @@ ___________________________________________________________________________
 
 % cell of aggregate coordinates
 ags = cell(nBnds,1); % trimmed later
-agsH = cell(0); % cell of aggregates with holes
+agsH = cell(0); % cell of aggregates with holes, currently it is empty
 
 % number of aggregates and vertices (before count)
 nAgs = 0;
@@ -117,7 +117,7 @@ warning('off','MATLAB:polyshape:boundary3Points');
 warning('off','MATLAB:polyshape:repairedBySimplify');
 % warning('off','MATLAB:polyshape:boolOperationFailed');
 
-% parameters for tolerance interpolation
+% parameters for tolerance interpolation, assuming a linear relation between tolerence and log(number of vertices)
 mTol = (tol2 - tol1) / (log(nVrts2)-log(nVrts1));
 bTol = tol1 - mTol * log(nVrts1);
 
@@ -135,7 +135,7 @@ for i = 1:nBnds
         plot(xB,yB, 'k');
         
         % tolerance (interpolation) for reduction
-        nVrtsi = length(xB) - 1;
+        nVrtsi = length(xB) - 1;            % number of vertices = number of points -1
         redTol = mTol * log(nVrtsi) + bTol;
         
         % reduce: reduce the density of points in xy using Ramer-Douglas-Peucker line simplification algorithm
@@ -144,7 +144,7 @@ for i = 1:nBnds
         polR = polyshape(xyR);
         
         % list reduction in vertices
-       %nVrtsi2 = length(xyR) - 1;
+       %nVrtsi2 = length(xyR(:,1)) - 1;
        %disp([num2str(i) ' ' num2str(redTol) ' ' num2str(nVrtsi) ' ' num2str(nVrtsi2) ' ' ]);
        %if i == 5000, return, end
         
@@ -167,10 +167,10 @@ for i = 1:nBnds
             nHoles = regj.NumHoles;
             
             if nHoles > 0 && ignoreHoles
-                % region is replaced by first internal region
+                % region is replaced by first internal region, because polyshape defines the outermost boundary as the exterior bound of a solid region
                 intRegs = regions(regj);
-                regjXY = intRegs(1).Vertices; % 'open'
-                prevFirstNan = find(isnan(regjXY(:,1)),1)-1;
+                regjXY = intRegs(1).Vertices; % 'open' 
+                prevFirstNan = find(isnan(regjXY(:,1)),1)-1;    % the row index of the first NaN
                 firstRegXY = regjXY(1:prevFirstNan,:);
                 regj = polyshape(firstRegXY);
             end
@@ -218,7 +218,7 @@ for i = 1:nBnds
                 
                 end
                 
-            elseif nHoles > 0
+            elseif nHoles > 0           % if there are holes and consider them, C or H shaped, 'open' vertices
                 
                 % obtain x-y coordinates and manage separately
                 xyRegH = regj.Vertices; % 'open', but with NaN divisions
@@ -283,7 +283,7 @@ divLine = [NaN NaN NaN];
 for i = 1:nAgs
     xy = ags{i}; % closed
     zeroCol = zeros(length(xy),1);
-    zeros_xy = [zeroCol+i xy];
+    zeros_xy = [zeroCol+i xy];                                             % number of the aggregate and its coordinates
     xysAg = [xysAg; zeros_xy; divLine];                                    %#ok<AGROW>
 end
 save([dirOut '/AG_xy ' smpName '.txt'],'xysAg','-ascii');

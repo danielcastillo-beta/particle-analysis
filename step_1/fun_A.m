@@ -6,6 +6,7 @@ ___________________________________________________________________________
  .  Read original
  .  Apply image processes as needed (adjustment, noise reduction...)
  .  Apply threshold and fill holes in binary image
+ .  Calculate percentages of areas in binary image, save results and images
 ___________________________________________________________________________
 
                                                                          %}
@@ -44,7 +45,7 @@ switch nargin, case 0
     end
 end
 
-%%% Image processes, order as needed. Processes can be used more than once
+%%% Image processes/'filter' process, order as needed. Processes can be used more than once
 
 imgIters = {'ori','adj','med','thr','fll'};
 
@@ -71,7 +72,7 @@ dirHstTxt = 'hist txt'; % histogram-txt subdirectory (out)
 
 tic
 
-% cell array of images
+% cell array of images, to store the original and filtered images
 nIter = length(imgIters);
 imgCell = cell(nIter,1);
 
@@ -79,7 +80,7 @@ imgCell = cell(nIter,1);
 img_orig = imread([dirSmp '/' smpName ext]);
 imgCell{1} = img_orig;
 
-% use default threshold if needed
+% use default threshold if needed, which is calculated by the Otsu method
 if thres == -1
     thres = graythresh(img_orig)*255;
 end
@@ -127,7 +128,7 @@ for i = 2:nIter
     
     end
     
-    % update name if applicable
+    % update name if applicable, to include also the applied filter parameter
     switch procLbl
         case {'FFC'}
             imgIters{i} = [procLbl num2str(sigmaFFC)];
@@ -140,7 +141,7 @@ for i = 2:nIter
     
 end
 
-% calculate higher 50% area of last two processed images, commonly 'thr' and 'fll'
+% from histograms of 2 bins, calculate higher 50% area of last two processed images, commonly 'thr' and 'fll'
 [countsT,~] = imhist(imgCell{end-1},2);
 [countsF,~] = imhist(imgCell{end},2);
 h50T = countsT(2)/sum(countsT)*100;
