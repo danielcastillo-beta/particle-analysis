@@ -3,7 +3,7 @@
 MATLAB code and files. There are three steps before calculating the gradation, with three corresponding functions (``fun_A``, ``fun_B``, and ``fun_C``). You can go folder by folder, opening and running the functions as-is. The necessary files are provided.
 
 - _Note 1:_ MATLAB requires the Image Processing Toolbox and the Mapping Toolbox.
-- _Note 2:_ This code is associated to the manuscript _"Image-based gradation and aggregate characterization: Case of cement-stabilized quarry fines"_ by Daniel Castillo, Yinning Zhang, and Leena Korkiala-Tanttu (under submission).
+- _Note 2:_ This code is associated to the paper _"Image-based gradation and aggregate characterization: Case of cement-stabilized quarry fines"_ by Daniel Castillo, Yinning Zhang, and Leena Korkiala-Tanttu (Road Materials and Pavement Design).
 
 
 ## **Step 1.** Original to binary image, ``fun_A``
